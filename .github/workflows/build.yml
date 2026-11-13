@@ -40,15 +40,45 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up .NET 10
+      - name: Set up .NET (exact SDK from global.json)
         uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
         with:
-          dotnet-version: "10.0.x"
+          global-json-file: global.json
+
+      # Package versions come from packages.lock.json in locked mode. Until that
+      # file is committed, a branch build generates it and uploads it (artifact
+      # "nuget-lock") to be reviewed and committed; a tag build refuses to run
+      # without it, so no release is ever built unlocked.
+      - name: Restore
+        id: restore
+        run: |
+          set -euo pipefail
+          proj="$PLUGIN_DIR/Jellyfin.Plugin.JavaScriptInjector.csproj"
+          if [ -f "$PLUGIN_DIR/packages.lock.json" ]; then
+            dotnet restore "$proj" -p:JellyfinTarget=jf12 --locked-mode
+            echo "locked=true" >> "$GITHUB_OUTPUT"
+          elif [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            echo "::error::No packages.lock.json is committed; a release must restore in locked mode."
+            exit 1
+          else
+            dotnet restore "$proj" -p:JellyfinTarget=jf12
+            echo "::warning::No packages.lock.json committed yet; generated one (artifact nuget-lock). Review and commit it."
+            echo "locked=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload the generated lock file
+        if: steps.restore.outputs.locked == 'false'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: nuget-lock
+          path: ${{ env.PLUGIN_DIR }}/packages.lock.json
+          if-no-files-found: error
+          retention-days: 30
 
       - name: Build (Jellyfin 12.4, Release)
         run: |
           dotnet build "$PLUGIN_DIR/Jellyfin.Plugin.JavaScriptInjector.csproj" \
-            --configuration Release -p:JellyfinTarget=jf12 \
+            --configuration Release --no-restore -p:JellyfinTarget=jf12 \
             -p:ContinuousIntegrationBuild=true -p:Deterministic=true
 
       - name: Package
@@ -104,11 +134,13 @@ jobs:
           path: out
 
       - name: Check the hash
+        env:
+          EXPECTED_SHA256: ${{ needs.build.outputs.sha256 }}
         run: |
           set -euo pipefail
           cd out
           sha256sum -c "$ZIP_NAME.sha256"
-          test "$(cut -d' ' -f1 "$ZIP_NAME.sha256")" = "${{ needs.build.outputs.sha256 }}"
+          test "$(cut -d' ' -f1 "$ZIP_NAME.sha256")" = "$EXPECTED_SHA256"
 
       - name: Attest build provenance
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
@@ -119,11 +151,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
+          ZIP_SHA256: ${{ needs.build.outputs.sha256 }}
         run: |
           set -euo pipefail
           gh release create "$TAG" \
             --repo "$GITHUB_REPOSITORY" \
             --title "JavaScript Injector (HAC) $TAG" \
-            --notes "HAC fork of JavaScript Injector 4.1.0.0 for Jellyfin 12.4. See CUSTOM_CHANGES.md. SHA-256: ${{ needs.build.outputs.sha256 }}" \
+            --notes "HAC fork of JavaScript Injector 4.1.0.0 for Jellyfin 12.4. See CUSTOM_CHANGES.md. SHA-256: $ZIP_SHA256" \
             --verify-tag \
             "out/$ZIP_NAME" "out/$ZIP_NAME.sha256"

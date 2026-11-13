@@ -11,11 +11,10 @@ namespace Jellyfin.Plugin.JavaScriptInjector.Services
     ///
     /// Script injection is normally handled entirely by
     /// <see cref="ScriptInjectionStartupFilter"/> at request time, which needs no
-    /// scheduled task at all. This task always cleans up any on-disk script block
-    /// left by earlier plugin versions (which used to write directly to
-    /// index.html), and only re-registers with File Transformation / falls back to
-    /// writing index.html itself when the middleware is disabled via
-    /// DisableScriptInjectionMiddleware.
+    /// scheduled task at all. This task only removes a script block that earlier
+    /// plugin versions wrote into index.html. HAC fork: there is no File
+    /// Transformation or on-disk fallback; with the middleware disabled nothing
+    /// is injected.
     /// </summary>
     public class StartupService : IScheduledTask
     {

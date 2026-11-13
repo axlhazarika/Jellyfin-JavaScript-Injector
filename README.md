@@ -28,27 +28,16 @@ The JavaScript Injector plugin for Jellyfin allows you to inject multiple, indep
 
 -   **Immediate Injection**: The plugin injects a loader script into the Jellyfin web UI on every page load, with no changes to your Jellyfin install on disk. Your custom scripts are loaded dynamically, and changes take effect after a simple browser refresh.
 
--   **Module and External Scripts**: Load a script as an ES module (so it can use `import`) or from a URL instead of pasting the code. External `http(s)` URLs are off by default; an admin can allow them with **Allow external script URLs**.
+-   **Module Scripts**: Load a script as an ES module (so it can use `import`) or from a "/" path on this server. HAC fork: scripts never load from other servers.
 
--   **Plugin Support**: Other plugins can register their own JavaScript snippets programmatically using the provided service interface.
+-   **Plugin Support**: HAC fork: turned off. Other plugins cannot register scripts.
 
-## ⚙️ Installation
+## ⚙️ Installation (HAC fork)
 
+Do **not** add any plugin repository for this fork: upstream's catalogue would install the upstream plugin, not this one. Download `Jellyfin.Plugin.JavaScriptInjector_HAC_12.4.zip` and its `.sha256` from this repository's GitHub release, check the hash and the attestation (`gh attestation verify <zip> --repo axlhazarika/Jellyfin-JavaScript-Injector`), unzip the DLL and `meta.json` into a folder `JavaScript Injector (HAC)_<version>` in Jellyfin's `plugins` folder, and restart Jellyfin.
 
-1.  In Jellyfin, go to **Dashboard** > **Plugins** > **Catalog** > ⚙️
-2.  Click **➕** and give the repository a name (e.g., "n00bcodr Plugins").
-3.  Set the **Repository URL** to:
-
-``` 
-https://raw.githubusercontent.com/n00bcodr/jellyfin-plugins/main/manifest.json 
-```
-
-> [!NOTE]
-> The same URL works for Jellyfin 10.11 and 12. Jellyfin installs the build that matches your server.
-
-4.  Click **Save**.
-5.  Go to the **Catalog** tab, find **JavaScript Injector** in the list, and click **Install**.
-6.  **Restart** your Jellyfin server to complete the installation.
+> [!WARNING]
+> Every script you save runs in the browser of everyone it applies to. Only paste scripts you have read and trust, and never one that fetches or loads code from another server.
 
 ---
 
@@ -64,6 +53,8 @@ https://raw.githubusercontent.com/n00bcodr/jellyfin-plugins/main/manifest.json
 6.  Use the **Enabled** checkbox to control whether the script is active.
 7.  Click **Save**.
 8.  **Refresh your browser** to see the changes take effect.
+
+HAC fork: only paste scripts you have reviewed. A pasted script could itself fetch code from another server, and the plugin cannot stop that.
 
 
 ## ⌨️ Usage Examples

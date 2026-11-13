@@ -240,7 +240,8 @@ namespace Jellyfin.Plugin.JavaScriptInjector.Services
         }
 
         /// <summary>
-        /// Checks that a script src is an http(s) URL or a root-relative path.
+        /// Checks that a script src is a root-relative path on this server
+        /// (HAC fork: absolute http(s) URLs are refused).
         /// </summary>
         /// <param name="src">The src value to check.</param>
         /// <returns>True if the src is allowed.</returns>
@@ -262,10 +263,11 @@ namespace Jellyfin.Plugin.JavaScriptInjector.Services
         }
 
         /// <summary>
-        /// Whether a (valid) src points off this server rather than at a "/" path.
+        /// Whether a src does not start with "/", so it would point off this
+        /// server. HAC fork: such a src is never loaded.
         /// </summary>
         /// <param name="src">The src value to check.</param>
-        /// <returns>True if the src is an absolute http(s) URL.</returns>
+        /// <returns>True if the src does not start with "/".</returns>
         public static bool IsExternalSrc(string src)
         {
             return !src.Trim().StartsWith('/');

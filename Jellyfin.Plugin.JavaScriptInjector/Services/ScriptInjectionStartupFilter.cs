@@ -27,8 +27,11 @@ namespace Jellyfin.Plugin.JavaScriptInjector.Services
     ///     on-disk write already added it);
     ///   - on any error it serves the original response unchanged, never throwing
     ///     into the pipeline;
-    ///   - can be disabled via the DisableScriptInjectionMiddleware config flag,
-    ///     which falls back to the legacy on-disk/File Transformation path.
+    ///   - can be disabled via the DisableScriptInjectionMiddleware config flag;
+    ///     HAC fork: then nothing is injected (no on-disk or File Transformation
+    ///     fallback).
+    ///   - matches request paths ending in /web/index.html or /web/, or exactly
+    ///     /web (so it also works under a base URL).
     /// </summary>
     public class ScriptInjectionStartupFilter : IStartupFilter
     {

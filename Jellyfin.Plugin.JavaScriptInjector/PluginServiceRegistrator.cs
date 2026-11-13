@@ -16,8 +16,8 @@ namespace Jellyfin.Plugin.JavaScriptInjector
             // Request-time injection (Jellyfin 10.11 & 12): injects the loader
             // <script> into web index.html on every request via ASP.NET middleware.
             // Primary injection path -- see ScriptInjectionStartupFilter for details.
-            // Kill-switchable via DisableScriptInjectionMiddleware, which falls back
-            // to StartupService's File Transformation / on-disk write path.
+            // Kill-switchable via DisableScriptInjectionMiddleware. HAC fork: switched
+            // off means nothing is injected; there is no on-disk fallback.
             serviceCollection.AddSingleton<IStartupFilter, ScriptInjectionStartupFilter>();
         }
     }
