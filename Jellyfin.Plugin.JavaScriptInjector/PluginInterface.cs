@@ -1,5 +1,4 @@
 #nullable enable
-using Newtonsoft.Json.Linq;
 
 namespace Jellyfin.Plugin.JavaScriptInjector
 {
@@ -14,9 +13,9 @@ namespace Jellyfin.Plugin.JavaScriptInjector
         /// <summary>
         /// Refuses every registration.
         /// </summary>
-        /// <param name="payload">Ignored.</param>
+        /// <param name="payload">Ignored (callers pass a Newtonsoft JObject).</param>
         /// <returns>Always false.</returns>
-        public static bool RegisterScript(JObject payload)
+        public static bool RegisterScript(object payload)
         {
             _ = payload;
             return false;

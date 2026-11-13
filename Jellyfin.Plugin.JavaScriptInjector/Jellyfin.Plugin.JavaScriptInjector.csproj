@@ -36,7 +36,6 @@
   <ItemGroup>
     <PackageReference Include="Jellyfin.Controller" Version="$(JellyfinVersion)"/>
     <PackageReference Include="Jellyfin.Model" Version="$(JellyfinVersion)"/>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
 
   <ItemGroup>
