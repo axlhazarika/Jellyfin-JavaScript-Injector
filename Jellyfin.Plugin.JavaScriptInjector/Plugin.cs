@@ -30,9 +30,11 @@ namespace Jellyfin.Plugin.JavaScriptInjector
 
         public IServiceProvider ServiceProvider { get; }
 
-        public override string Name => "JavaScript Injector";
+        public override string Name => "JavaScript Injector (HAC)";
 
-        public override Guid Id => Guid.Parse("f5a34f7b-2e8a-4e6a-a722-3a216a81b374");
+        // HAC fork: its own id, so no catalogue entry for the upstream plugin can
+        // ever update or replace it.
+        public override Guid Id => Guid.Parse("559ef066-e27f-4961-bd06-8ea1bdfc924c");
 
         public string IndexHtmlPath => Path.Combine(_appPaths.WebPath, "index.html");
 

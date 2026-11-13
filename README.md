@@ -1,3 +1,5 @@
+> **HAC fork.** This is AXL's hardened build of JavaScript Injector 4.1.0.0 (upstream: n00bcodr/Jellyfin-JavaScript-Injector, GPL-3.0). Scripts load only from this Jellyfin server, other plugins cannot register scripts, it never writes `index.html`, and it has its own plugin id and no catalogue, so Jellyfin never updates it from upstream. Builds come from this repository's GitHub Actions (tags `v*-hac`); changes are listed in `CUSTOM_CHANGES.md`. The upstream README follows.
+
 # Jellyfin Plugin - JavaScript Injector
 
 The JavaScript Injector plugin for Jellyfin allows you to inject multiple, independent JavaScript snippets into the Jellyfin web UI. It provides a powerful and easy-to-use configuration page to manage all your custom scripts from one place.

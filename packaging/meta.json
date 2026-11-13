@@ -1,0 +1,16 @@
+{
+  "category": "General",
+  "changelog": "HAC fork of JavaScript Injector 4.1.0.0: scripts load only from this server, other plugins cannot register scripts, no index.html writes, own plugin id, built against Jellyfin 12.4.0.",
+  "description": "Injects admin-entered JavaScript into the Jellyfin web client. HAC fork, hardened.",
+  "guid": "559ef066-e27f-4961-bd06-8ea1bdfc924c",
+  "name": "JavaScript Injector (HAC)",
+  "overview": "Inject custom JavaScript into the Jellyfin web UI (hardened fork).",
+  "owner": "axlhazarika",
+  "targetAbi": "12.4.0.0",
+  "timestamp": "__TIMESTAMP__",
+  "version": "4.1.0.1",
+  "status": "Active",
+  "autoUpdate": false,
+  "imagePath": "",
+  "assemblies": ["Jellyfin.Plugin.JavaScriptInjector.dll"]
+}

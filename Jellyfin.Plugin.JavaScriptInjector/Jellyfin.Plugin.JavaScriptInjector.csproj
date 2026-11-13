@@ -11,17 +11,19 @@
 
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <AssemblyVersion>4.1.0.0</AssemblyVersion>
-    <FileVersion>4.1.0.0</FileVersion>
+    <!-- HAC fork: upstream 4.1.0.0 plus our hardening. Released as tag v4.1.0.1-hac. -->
+    <AssemblyVersion>4.1.0.1</AssemblyVersion>
+    <FileVersion>4.1.0.1</FileVersion>
+    <InformationalVersion>4.1.0.1-hac</InformationalVersion>
     <RootNamespace>Jellyfin.Plugin.JavaScriptInjector</RootNamespace>
     <AssemblyName>Jellyfin.Plugin.JavaScriptInjector</AssemblyName>
   </PropertyGroup>
 
-  <!-- Jellyfin 12 / .NET 10. The Jellyfin.Controller/Model 12.0.0-rc1 NuGet packages
-       bring the rest transitively. Bump to 12.0.0 once it ships. -->
+  <!-- Jellyfin 12 / .NET 10. HAC fork: built against the 12.4.0 packages, the
+       server version it runs on (meta.json targetAbi 12.4.0.0). -->
   <PropertyGroup Condition="'$(JellyfinTarget)' == 'jf12'">
     <TargetFramework>net10.0</TargetFramework>
-    <JellyfinVersion>12.0.0-rc5</JellyfinVersion>
+    <JellyfinVersion>12.4.0</JellyfinVersion>
   </PropertyGroup>
 
   <!-- Jellyfin 10.11 / .NET 9. Pinned to 10.11.0 (as upstream does) so the artifact
