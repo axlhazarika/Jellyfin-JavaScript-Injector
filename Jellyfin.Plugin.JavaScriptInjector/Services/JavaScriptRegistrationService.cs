@@ -207,7 +207,7 @@ namespace Jellyfin.Plugin.JavaScriptInjector.Services
 
             if (hasSrc && !IsValidSrc(payload.Src!))
             {
-                return (false, "Script src must be an http(s) URL or a root-relative path");
+                return (false, "Script src must be a root-relative path on this server");
             }
 
             if (string.IsNullOrWhiteSpace(payload.PluginId))
@@ -257,13 +257,8 @@ namespace Jellyfin.Plugin.JavaScriptInjector.Services
                 return false;
             }
 
-            if (src.StartsWith('/'))
-            {
-                return true;
-            }
-
-            return Uri.TryCreate(src, UriKind.Absolute, out var uri)
-                && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+            // HAC fork: only paths on this server; absolute URLs are refused.
+            return src.StartsWith('/');
         }
 
         /// <summary>

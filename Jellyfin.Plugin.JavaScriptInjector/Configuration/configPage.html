@@ -40,14 +40,8 @@
                 </div>
               </div>
 
-              <div class="checkboxContainer checkboxContainer-withDescription" style="margin-bottom: 1.5em">
-                <label class="emby-checkbox-label">
-                  <input is="emby-checkbox" type="checkbox" id="allowExternalUrlsCheckbox" />
-                  <span>Allow external script URLs</span>
-                </label>
-                <div class="fieldDescription checkboxFieldDescription">
-                  When off, "Script URL" only loads paths on this server (starting with /).
-                </div>
+              <div class="fieldDescription" style="margin-bottom: 1.5em">
+                "Script URL" only loads paths on this server (starting with /). This build never loads scripts from other servers.
               </div>
 
               <div id="scriptsContainer" class="verticalSection-extrabottompadding">
@@ -554,9 +548,9 @@
             });
           },
 
-          // Fades closed entries that won't run (disabled, or blocked external URL).
+          // Fades closed entries that won't run (disabled, or an external URL, which this build never loads).
           refreshDimming: function () {
-            const allowExternal = document.querySelector("#allowExternalUrlsCheckbox").checked;
+            const allowExternal = false;
             document.querySelectorAll("#scriptsContainer > details").forEach((d) => {
               const srcInput = d.querySelector(".script-src-input");
               const src = srcInput ? srcInput.value.trim() : "";
@@ -715,8 +709,6 @@
 
                 scriptsContainer.innerHTML = "";
                 pluginScriptsContainer.innerHTML = "";
-                document.querySelector("#allowExternalUrlsCheckbox").checked =
-                  !!config.AllowExternalScriptUrls;
 
                 // Load user scripts
                 if (config.CustomJavaScripts && config.CustomJavaScripts.length > 0) {
@@ -1018,9 +1010,6 @@
               config
             ) {
               config.CustomJavaScripts = scripts;
-              config.AllowExternalScriptUrls = document.querySelector(
-                "#allowExternalUrlsCheckbox"
-              ).checked;
               // Don't modify PluginJavaScripts array here
               ApiClient.updatePluginConfiguration(JavaScriptInjectorConfig.pluginId, config).then(
                 function (result) {
@@ -1219,13 +1208,6 @@
               JavaScriptInjectorConfig.markDirty();
               JavaScriptInjectorConfig.updateEmptyState();
             });
-
-            document
-              .querySelector("#allowExternalUrlsCheckbox")
-              .addEventListener("change", () => {
-                JavaScriptInjectorConfig.markDirty();
-                JavaScriptInjectorConfig.refreshDimming();
-              });
 
             document.querySelector("#scriptSearchInput").addEventListener("input", function () {
               JavaScriptInjectorConfig.filterScripts();

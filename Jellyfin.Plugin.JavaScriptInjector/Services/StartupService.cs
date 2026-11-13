@@ -1,12 +1,8 @@
 #nullable enable
-using System.Reflection;
-using System.Runtime.Loader;
 using System.Text.RegularExpressions;
-using Jellyfin.Plugin.JavaScriptInjector.Helpers;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Model.Tasks;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json.Linq;
 
 namespace Jellyfin.Plugin.JavaScriptInjector.Services
 {
@@ -28,7 +24,7 @@ namespace Jellyfin.Plugin.JavaScriptInjector.Services
 
         public string Name => "JavaScript Injector Startup";
         public string Key => "JavaScriptInjectorStartup";
-        public string Description => "Cleans up legacy on-disk script injection and, if the request-time middleware is disabled, falls back to File Transformation / direct index.html injection.";
+        public string Description => "Removes a script block older versions wrote into index.html. This build never writes index.html otherwise.";
         public string Category => "Startup Services";
 
         public StartupService(ILogger<StartupService> logger, IApplicationPaths appPaths)
@@ -41,13 +37,9 @@ namespace Jellyfin.Plugin.JavaScriptInjector.Services
         {
             await Task.Run(() =>
             {
+                // HAC fork: only removes a block an older version wrote into
+                // index.html. Nothing is ever injected on disk.
                 CleanupOldScript();
-
-                var config = Plugin.Instance?.Configuration;
-                if (config != null && config.DisableScriptInjectionMiddleware)
-                {
-                    RegisterFileTransformation();
-                }
             }, cancellationToken);
         }
 
@@ -79,49 +71,6 @@ namespace Jellyfin.Plugin.JavaScriptInjector.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during cleanup of old script from index.html.");
-            }
-        }
-
-        private void RegisterFileTransformation()
-        {
-            Assembly? fileTransformationAssembly =
-                AssemblyLoadContext.All.SelectMany(x => x.Assemblies).FirstOrDefault(x =>
-                    x.FullName?.Contains(".FileTransformation") ?? false);
-
-            if (fileTransformationAssembly != null)
-            {
-                Type? pluginInterfaceType = fileTransformationAssembly.GetType("Jellyfin.Plugin.FileTransformation.PluginInterface");
-
-                if (pluginInterfaceType != null)
-                {
-                    var payload = new JObject
-                    {
-                        { "id", Plugin.Instance?.Id.ToString() },
-                        { "fileNamePattern", "index.html" },
-                        { "callbackAssembly", GetType().Assembly.FullName },
-                        { "callbackClass", typeof(TransformationPatches).FullName },
-                        { "callbackMethod", nameof(TransformationPatches.IndexHtml) }
-                    };
-
-                    pluginInterfaceType.GetMethod("RegisterTransformation")?.Invoke(null, new object?[] { payload });
-                    _logger.LogInformation("Successfully registered JavaScript Injector with the File Transformation plugin.");
-                }
-                else
-                {
-                    _logger.LogWarning("Could not find PluginInterface in FileTransformation assembly. Using fallback injection method.");
-                    if (Plugin.Instance != null)
-                    {
-                        Plugin.Instance.InjectScript();
-                    }
-                }
-            }
-            else
-            {
-                _logger.LogWarning("File Transformation plugin not found. Using fallback injection method.");
-                if (Plugin.Instance != null)
-                {
-                    Plugin.Instance.InjectScript();
-                }
             }
         }
 

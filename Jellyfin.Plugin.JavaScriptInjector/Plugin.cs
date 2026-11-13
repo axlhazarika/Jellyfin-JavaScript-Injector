@@ -36,51 +36,6 @@ namespace Jellyfin.Plugin.JavaScriptInjector
 
         public string IndexHtmlPath => Path.Combine(_appPaths.WebPath, "index.html");
 
-        public void InjectScript()
-        {
-            var indexPath = IndexHtmlPath;
-            if (!File.Exists(indexPath))
-            {
-                _logger.LogError("Could not find index.html at path: {Path}", indexPath);
-                return;
-            }
-
-            var injectionBlock = JavascriptHelper.BuildInjectionBlock();
-
-            try
-            {
-                var content = File.ReadAllText(indexPath);
-
-                if (content.Contains(injectionBlock))
-                {
-                    _logger.LogInformation("JavaScript Injector script is already correctly injected. No changes needed.");
-                    return;
-                }
-                // --- Removal Logic ---
-                // This logic is designed to be idempotent and handle upgrades gracefully.
-
-                // 1. Remove any blocks from this new, comment-wrapped version.
-                var newRegex = new Regex($"{JavascriptHelper.StartComment}[\\s\\S]*?{JavascriptHelper.EndComment}", RegexOptions.Multiline);
-                content = newRegex.Replace(content, string.Empty);
-
-                var closingBodyTag = "</body>";
-                if (content.Contains(closingBodyTag))
-                {
-                    content = content.Replace(closingBodyTag, $"{injectionBlock}\n{closingBodyTag}");
-                    File.WriteAllText(indexPath, content);
-                    _logger.LogInformation("Successfully injected the JavaScriptInjector script block.");
-                }
-                else
-                {
-                    _logger.LogWarning("Could not find </body> tag in index.html. Scripts not injected.");
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error while trying to inject script block into index.html.");
-            }
-        }
-
         public override void OnUninstalling()
         {
             try

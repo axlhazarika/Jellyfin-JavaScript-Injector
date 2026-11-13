@@ -30,17 +30,10 @@ namespace Jellyfin.Plugin.JavaScriptInjector.Configuration
         /// <summary>
         /// Gets or sets a value indicating whether the request-time script injection
         /// middleware (<see cref="Services.ScriptInjectionStartupFilter"/>) is disabled.
-        /// When disabled, the plugin falls back to registering with the File
-        /// Transformation plugin (if installed) or writing directly to index.html.
-        /// Off by default -- the middleware is the primary injection path.
+        /// HAC fork: when disabled, nothing is injected at all; there is no fallback
+        /// that writes index.html or uses the File Transformation plugin.
         /// </summary>
         public bool DisableScriptInjectionMiddleware { get; set; }
-
-        /// <summary>
-        /// Gets or sets a value indicating whether scripts may load from external
-        /// (http/https) URLs. When false, only paths starting with "/" are loaded.
-        /// </summary>
-        public bool AllowExternalScriptUrls { get; set; }
     }
 
     /// <summary>

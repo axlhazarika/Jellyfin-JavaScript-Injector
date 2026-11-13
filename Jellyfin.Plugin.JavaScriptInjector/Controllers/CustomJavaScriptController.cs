@@ -126,7 +126,7 @@ namespace Jellyfin.Plugin.JavaScriptInjector.Controllers
         /// inline modules, since import is not valid inside the classic-script wrapper).
         /// </summary>
         /// <returns>True if the entry was handled here.</returns>
-        private static bool AppendExternalScript(StringBuilder builder, CustomJavaScriptEntry entry, bool allowExternal)
+        private static bool AppendExternalScript(StringBuilder builder, CustomJavaScriptEntry entry)
         {
             var hasSrc = !string.IsNullOrWhiteSpace(entry.Src);
             if (!hasSrc && !entry.Module)
@@ -140,9 +140,11 @@ namespace Jellyfin.Plugin.JavaScriptInjector.Controllers
                 return true;
             }
 
-            if (hasSrc && !allowExternal && JavaScriptRegistrationService.IsExternalSrc(entry.Src))
+            // HAC fork: scripts never load from another server. Only paths on this
+            // Jellyfin server ("/...") may be used as a src.
+            if (hasSrc && JavaScriptRegistrationService.IsExternalSrc(entry.Src))
             {
-                builder.AppendLine($"console.warn('JavaScript Injector: skipped external script URL (enable \"Allow external script URLs\" in the plugin settings to load it)', {JsonSerializer.Serialize(entry.Name)});");
+                builder.AppendLine($"console.warn('JavaScript Injector: skipped external script URL (not allowed in this build)', {JsonSerializer.Serialize(entry.Name)});");
                 return true;
             }
 
@@ -151,7 +153,7 @@ namespace Jellyfin.Plugin.JavaScriptInjector.Controllers
                 return true;
             }
 
-            builder.AppendLine($"/* {(hasSrc ? "External" : "Module")} Script: {entry.Name.Replace("*/", "* /")} */");
+            builder.AppendLine($"/* {(hasSrc ? "Src" : "Module")} Script: {CommentSafe(entry.Name)} */");
             builder.AppendLine("(function() { try {");
             builder.AppendLine("var s = document.createElement('script');");
             if (entry.Module)
@@ -188,41 +190,32 @@ namespace Jellyfin.Plugin.JavaScriptInjector.Controllers
 
             foreach (var scriptEntry in userScriptsToInject)
             {
-                if (AppendExternalScript(scriptBuilder, scriptEntry, config.AllowExternalScriptUrls))
+                if (AppendExternalScript(scriptBuilder, scriptEntry))
                 {
                     continue;
                 }
 
                 if (!string.IsNullOrWhiteSpace(scriptEntry.Script))
                 {
-                    scriptBuilder.AppendLine($"/* User Script: {scriptEntry.Name} */");
+                    scriptBuilder.AppendLine($"/* User Script: {CommentSafe(scriptEntry.Name)} */");
                     scriptBuilder.AppendLine("(function() { try {");
                     scriptBuilder.AppendLine(scriptEntry.Script);
-                    scriptBuilder.AppendLine("} catch (e) { console.error('Error in Injected JavaScript [\"" + scriptEntry.Name + "\"]:', e); } })();");
+                    scriptBuilder.AppendLine($"}} catch (e) {{ console.error('Error in Injected JavaScript', {JsonSerializer.Serialize(scriptEntry.Name)}, e); }} }})();");
                 }
             }
 
-            // Filter plugin scripts based on whether they are enabled and match the authentication requirement
-            var pluginScriptsToInject = config.PluginJavaScripts
-                .Where(s => s.Enabled && s.RequiresAuthentication == requiresAuth);
-
-            foreach (var scriptEntry in pluginScriptsToInject)
-            {
-                if (AppendExternalScript(scriptBuilder, scriptEntry, config.AllowExternalScriptUrls))
-                {
-                    continue;
-                }
-
-                if (!string.IsNullOrWhiteSpace(scriptEntry.Script))
-                {
-                    scriptBuilder.AppendLine($"/* Plugin Script: {scriptEntry.Name} (from {scriptEntry.PluginName}) */");
-                    scriptBuilder.AppendLine("(function() { try {");
-                    scriptBuilder.AppendLine(scriptEntry.Script);
-                    scriptBuilder.AppendLine("} catch (e) { console.error('Error in Plugin JavaScript [\"" + scriptEntry.Name + "\" from \"" + scriptEntry.PluginName + "\"]:', e); } })();");
-                }
-            }
+            // HAC fork: scripts registered by other plugins are never served. Only
+            // scripts an admin entered on the config page run.
 
             return Content(scriptBuilder.ToString(), "application/javascript");
+        }
+
+        /// <summary>
+        /// Makes text safe inside a /* */ comment of the generated script.
+        /// </summary>
+        private static string CommentSafe(string text)
+        {
+            return text.Replace("*/", "* /", StringComparison.Ordinal).Replace("\r", " ", StringComparison.Ordinal).Replace("\n", " ", StringComparison.Ordinal);
         }
     }
 }
